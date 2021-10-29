@@ -49,7 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   var balanceArray = [15000,25000,35000];
   var dateArray = ["4/4/2021","5/4/2021","6/4/2021"];
-  var categoryArray = ["Makan Siang", "Bonus dari bos","Transportation"];
+  var categoryArray = ["Food & Beverages", "Bonus","Transportation"];
+  var descriptionArray = ["Makan Siang", "Bonus dari bos","Taxi pulang ke rumah"];
   var isInOrOut = [false,true,false];
 
   @override
@@ -89,11 +90,22 @@ class _MyHomePageState extends State<MyHomePage> {
               shrinkWrap: true,
               itemCount: balanceArray.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  leading: isInOrOut[index] ? Icon(Icons.arrow_upward_outlined, color: Colors.red,) : Icon(Icons.arrow_downward_outlined,color: Colors.green,),
-                  title: Text("Rp. ${balanceArray[index]}"),
-                  subtitle: Text("${categoryArray[index]}"),
-                  trailing: Text("${dateArray[index]}"),
+                return Card(
+                  child: Container(
+                    padding: EdgeInsets.all(8.0),
+                    child: ListTile(
+                      leading: isInOrOut[index] ?  Icon(Icons.arrow_downward_outlined,color: Colors.green,) : Icon(Icons.arrow_upward_outlined, color: Colors.red,) ,
+                      title: Text("Rp. ${balanceArray[index]}"),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${categoryArray[index]}",softWrap: true,),
+                          Text("${descriptionArray[index]}",softWrap: true,),
+                        ],
+                      ),
+                      trailing: Text("${dateArray[index]}"),
+                    ),
+                  ),
                 );
               },
             )
