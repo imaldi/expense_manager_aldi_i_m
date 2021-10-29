@@ -1,9 +1,10 @@
 import 'package:expense_manager_aldi_i_m/helper/navigator_helper.dart';
 import 'package:expense_manager_aldi_i_m/screen/add_expense_or_income_screen.dart';
-import 'package:expense_manager_aldi_i_m/widget/custom_tab_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'const/const.dart';
+import 'data/app_database.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,14 +14,17 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: Colors.blue,
+    return Provider(
+      create: (BuildContext context) { return AppDatabase().expenseOrIncomeDao; },
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          primaryColor: Colors.blue,
+        ),
+        home: MyHomePage(title: 'Flutter Demo Home Page'),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
@@ -85,40 +89,55 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            ListView.builder(
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              itemCount: balanceArray.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  child: Container(
-                    padding: EdgeInsets.all(8.0),
-                    child: ListTile(
-                      leading: isInOrOut[index] ?  Icon(Icons.arrow_downward_outlined,color: Colors.green,) : Icon(Icons.arrow_upward_outlined, color: Colors.red,) ,
-                      title: Text("Rp. ${balanceArray[index]}"),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("${categoryArray[index]}",softWrap: true,),
-                          Text("${descriptionArray[index]}",softWrap: true,),
-                        ],
-                      ),
-                      trailing: Text("${dateArray[index]}"),
-                    ),
-                  ),
-                );
-              },
-            )
+            _buildItemList(context)
           ]),
         ),
       floatingActionButton: Container(
         padding: EdgeInsets.all(16.0),
         child: FloatingActionButton(
           onPressed: () {
-            navigateTo(context, AddExpenseOrIncomeScreen());
+            navigateTo(context, Provider.value(value: Provider.of<ExpenseOrIncomeDao>(context, listen: false),
+            child: AddExpenseOrIncomeScreen()));
           },
         child: Icon(Icons.add,color: Colors.white,),),
       ),
+    );
+
+
+  }
+  _buildItemList(BuildContext context){
+    final dao = Provider.of<ExpenseOrIncomeDao>(context, listen: false);
+
+    return StreamBuilder(
+        stream: dao.watchAllExpenseOrIncomes(),
+        builder:(context, AsyncSnapshot<List<ExpenseOrIncome>> snapshot) {
+          final item = snapshot.data ?? [];
+
+          return ListView.builder(
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            itemCount: item.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: Container(
+                  padding: EdgeInsets.all(8.0),
+                  child: ListTile(
+                    leading: item[index].isIncome ?  Icon(Icons.arrow_downward_outlined,color: Colors.green,) : Icon(Icons.arrow_upward_outlined, color: Colors.red,) ,
+                    title: Text("Rp. ${item[index].amount}"),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("category placeholder",softWrap: true,),
+                        Text("${item[index].description}",softWrap: true,),
+                      ],
+                    ),
+                    trailing: Text("${dateArray[index]}"),
+                  ),
+                ),
+              );
+            },
+          );
+        }
     );
   }
 }

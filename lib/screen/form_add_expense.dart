@@ -1,11 +1,16 @@
 import 'package:expense_manager_aldi_i_m/const/const.dart';
+import 'package:expense_manager_aldi_i_m/data/app_database.dart';
 import 'package:expense_manager_aldi_i_m/helper/intl_tools.dart';
 import 'package:expense_manager_aldi_i_m/helper/navigator_helper.dart';
 import 'package:expense_manager_aldi_i_m/screen/select_category_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:moor_flutter/moor_flutter.dart' as moor_flutter;
+import 'package:provider/provider.dart';
 
 class FormAddExpense extends StatefulWidget {
-  const FormAddExpense({Key? key}) : super(key: key);
+  const FormAddExpense({Key? key, required this.isIncome}) : super(key: key);
+  final bool? isIncome;
 
   @override
   _FormAddExpenseState createState() => _FormAddExpenseState();
@@ -81,6 +86,7 @@ class _FormAddExpenseState extends State<FormAddExpense> {
             child: TextFormField(
               controller: amountController,
               decoration: InputDecoration(labelText: "Amount", labelStyle: TextStyle(color: Colors.grey)),
+              keyboardType: TextInputType.number,
               validator: (val){
                 if((val ?? "").isEmpty){
                   return "Amount cannot be blank";
@@ -111,12 +117,24 @@ class _FormAddExpenseState extends State<FormAddExpense> {
                 child: Container(
                   padding: EdgeInsets.all(size_medium),
 
-                child: ElevatedButton(onPressed: (){}, child: Text("Save"))),
+                child: ElevatedButton(onPressed: (){
+                  final dao = Provider.of<ExpenseOrIncomeDao>(context, listen: false);
+                  final expenseOrIncome = ExpenseOrIncomesCompanion(
+                    description: moor_flutter.Value(descriptionController.text),
+                    date_commit: moor_flutter.Value(date),
+                    isIncome: moor_flutter.Value(widget.isIncome ?? false),
+                    amount: moor_flutter.Value(int.parse(amountController.text))
+                    // dueDate: Value(newTaskDate),
+                  );
+                  dao.insertExpenseOrIncome(expenseOrIncome);
+                  navigatorPop(context);
+                }, child: Text("Save"))),
               ),
             ],
           )
         ],
       ),
-    ));
+    ),
+    );
   }
 }

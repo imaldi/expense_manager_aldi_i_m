@@ -37,8 +37,8 @@ class _AddExpenseOrIncomeScreenState extends State<AddExpenseOrIncomeScreen> {
               Expanded(
                 child: TabBarView(
                   children: [
-                    Container(child: FormAddExpense()),
-                    Container(child: FormAddExpense()),
+                    Container(child: FormAddExpense(isIncome: false,)),
+                    Container(child: FormAddExpense(isIncome: true,)),
                   ],
                 ),
               ),
