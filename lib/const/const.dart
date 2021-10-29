@@ -1,0 +1,1 @@
+const INITIAL_BALANCE = 100000;
