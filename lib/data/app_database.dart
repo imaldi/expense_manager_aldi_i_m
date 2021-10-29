@@ -82,7 +82,23 @@ class ExpenseOrIncomeDao extends DatabaseAccessor<AppDatabase> with _$ExpenseOrI
   // Called by the AppDatabase class
   ExpenseOrIncomeDao(this.db) : super(db);
 
-  Stream<List<ExpenseOrIncome>> watchAllExpenseOrIncomes() {
+  // Stream<List<ExpenseOrIncome>> watchAllExpenseOrIncomes() {
+  //   // Wrap the whole select statement in parenthesis
+  //   return (select(expenseOrIncomes)
+  //   // Statements like orderBy and where return void => the need to use a cascading ".." operator
+  //     ..orderBy(
+  //       ([
+  //         // Primary sorting by due date
+  //             (t) =>
+  //             OrderingTerm(expression: t.date_commit, mode: OrderingMode.desc),
+  //         // Secondary alphabetical sorting
+  //             (t) => OrderingTerm(expression: t.description),
+  //       ]),
+  //     ))
+  //   // watch the whole select statement
+  //       .watch();
+  // }
+  Stream<List<ExpenseOrIncomeWithCategory>> watchAllExpenseOrIncomes() {
     // Wrap the whole select statement in parenthesis
     return (select(expenseOrIncomes)
     // Statements like orderBy and where return void => the need to use a cascading ".." operator
@@ -95,8 +111,24 @@ class ExpenseOrIncomeDao extends DatabaseAccessor<AppDatabase> with _$ExpenseOrI
               (t) => OrderingTerm(expression: t.description),
         ]),
       ))
+        .join(
+      [
+        // Join all the tasks with their tags.
+        // It's important that we use equalsExp and not just equals.
+        // This way, we can join using all tag names in the tasks table, not just a specific one.
+        leftOuterJoin(categorys, categorys.name.equalsExp(expenseOrIncomes.categoryName)),
+      ],
+    )
     // watch the whole select statement
-        .watch();
+        .watch().map(
+            (rows) => rows.map(
+              (row) {
+            return ExpenseOrIncomeWithCategory(
+              row.readTable(expenseOrIncomes),
+              row.readTable(categorys),
+            );
+          },
+        ).toList(),);
   }
 
 
