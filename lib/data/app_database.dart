@@ -10,6 +10,7 @@ class ExpenseOrIncomes extends Table {
   // If the length constraint is not fulfilled, the ExpenseOrIncome will not
   // be inserted into the database and an exception will be thrown.
   TextColumn get description => text().withLength(min: 2, max: 50)();
+  TextColumn get categoryName => text().nullable().customConstraint('NULL REFERENCES categorys(name)')();
   IntColumn get amount => integer()();
   // DateTime is not natively supported by SQLite
   // Moor converts it to & from UNIX seconds
@@ -17,9 +18,27 @@ class ExpenseOrIncomes extends Table {
   // Booleans are not supported as well, Moor converts them to integers
   // Simple default values are specified as Constants
   BoolColumn get isIncome => boolean().withDefault(Constant(false))();
+
 }
 
-@UseMoor(tables: [ExpenseOrIncomes], daos: [ExpenseOrIncomeDao])
+class Categorys extends Table {
+  TextColumn get name => text().withLength(min: 1, max: 10)();
+
+  // Making name as the primary key of a Category requires names to be unique
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
+class ExpenseOrIncomeWithCategory {
+  final ExpenseOrIncome expenseOrIncome;
+  final Category category;
+  ExpenseOrIncomeWithCategory(
+      this.expenseOrIncome,
+      this.category
+      );
+}
+
+@UseMoor(tables: [ExpenseOrIncomes, Categorys], daos: [ExpenseOrIncomeDao, CategoryDao])
 class AppDatabase extends _$AppDatabase {
   AppDatabase()
   // Specify the location of the database file
@@ -30,11 +49,28 @@ class AppDatabase extends _$AppDatabase {
   )));
 
   // Bump this when changing tables and columns.
-  // Migrations will be covered in the next part.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    // Runs if the database has already been opened on the device with a lower version
+    onUpgrade: (migrator, from, to) async {
+      if (from == 1) {
+        await migrator.addColumn(expenseOrIncomes, expenseOrIncomes.categoryName);
+        await migrator.createTable(categorys);
+      }
+    },
 
+    // Runs after all the migrations but BEFORE any queries have a chance to execute // deprecated
+    // beforeOpen: (db, details) async {
+    //   await db.customStatement('PRAGMA foreign_keys = ON');
+    // },
+    // updated
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 }
 
 @UseDao(
@@ -46,13 +82,6 @@ class ExpenseOrIncomeDao extends DatabaseAccessor<AppDatabase> with _$ExpenseOrI
   // Called by the AppDatabase class
   ExpenseOrIncomeDao(this.db) : super(db);
 
-  // // All tables have getters in the generated class - we can select the ExpenseOrIncomes table
-  // Future<List<ExpenseOrIncome>> getAllExpenseOrIncomes() => select(ExpenseOrIncomes).get();
-  //
-  // // Moor supports Streams which emit elements when the watched data changes
-  // Stream<List<ExpenseOrIncome>> watchAllExpenseOrIncomes() => select(ExpenseOrIncomes).watch();
-
-  // Updated to use the orderBy statement
   Stream<List<ExpenseOrIncome>> watchAllExpenseOrIncomes() {
     // Wrap the whole select statement in parenthesis
     return (select(expenseOrIncomes)
@@ -78,6 +107,30 @@ class ExpenseOrIncomeDao extends DatabaseAccessor<AppDatabase> with _$ExpenseOrI
   Future updateExpenseOrIncome(Insertable<ExpenseOrIncome> expenseOrIncome) => update(expenseOrIncomes).replace(expenseOrIncome);
 
   Future deleteExpenseOrIncome(Insertable<ExpenseOrIncome> expenseOrIncome) => delete(expenseOrIncomes).delete(expenseOrIncome);
+
+}
+
+@UseDao(
+  tables: [Categorys],
+)
+class CategoryDao extends DatabaseAccessor<AppDatabase> with _$CategoryDaoMixin {
+  final AppDatabase db;
+
+  // Called by the AppDatabase class
+  CategoryDao(this.db) : super(db);
+
+  // // All tables have getters in the generated class - we can select the ExpenseOrIncomes table
+  Stream<List<Category>> watchAllCategorys() => select(categorys).watch();
+
+
+
+
+  Future insertCategory(Insertable<Category> category) => into(categorys).insert(category);
+
+  // Updates a ExpenseOrIncome with a matching primary key
+  Future updateCategory(Insertable<Category> category) => update(categorys).replace(category);
+
+  Future deleteCategory(Insertable<Category> category) => delete(categorys).delete(category);
 
 }
 

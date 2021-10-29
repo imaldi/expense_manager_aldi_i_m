@@ -10,12 +10,14 @@ part of 'app_database.dart';
 class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
   final int id;
   final String description;
+  final String? categoryName;
   final int amount;
   final DateTime? date_commit;
   final bool isIncome;
   ExpenseOrIncome(
       {required this.id,
       required this.description,
+      this.categoryName,
       required this.amount,
       this.date_commit,
       required this.isIncome});
@@ -28,6 +30,8 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
           .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
       description: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}description'])!,
+      categoryName: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}category_name']),
       amount: const IntType()
           .mapFromDatabaseResponse(data['${effectivePrefix}amount'])!,
       date_commit: const DateTimeType()
@@ -41,6 +45,9 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['description'] = Variable<String>(description);
+    if (!nullToAbsent || categoryName != null) {
+      map['category_name'] = Variable<String?>(categoryName);
+    }
     map['amount'] = Variable<int>(amount);
     if (!nullToAbsent || date_commit != null) {
       map['date_commit'] = Variable<DateTime?>(date_commit);
@@ -53,6 +60,9 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
     return ExpenseOrIncomesCompanion(
       id: Value(id),
       description: Value(description),
+      categoryName: categoryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryName),
       amount: Value(amount),
       date_commit: date_commit == null && nullToAbsent
           ? const Value.absent()
@@ -67,6 +77,7 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
     return ExpenseOrIncome(
       id: serializer.fromJson<int>(json['id']),
       description: serializer.fromJson<String>(json['description']),
+      categoryName: serializer.fromJson<String?>(json['categoryName']),
       amount: serializer.fromJson<int>(json['amount']),
       date_commit: serializer.fromJson<DateTime?>(json['date_commit']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
@@ -78,6 +89,7 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'description': serializer.toJson<String>(description),
+      'categoryName': serializer.toJson<String?>(categoryName),
       'amount': serializer.toJson<int>(amount),
       'date_commit': serializer.toJson<DateTime?>(date_commit),
       'isIncome': serializer.toJson<bool>(isIncome),
@@ -87,12 +99,14 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
   ExpenseOrIncome copyWith(
           {int? id,
           String? description,
+          String? categoryName,
           int? amount,
           DateTime? date_commit,
           bool? isIncome}) =>
       ExpenseOrIncome(
         id: id ?? this.id,
         description: description ?? this.description,
+        categoryName: categoryName ?? this.categoryName,
         amount: amount ?? this.amount,
         date_commit: date_commit ?? this.date_commit,
         isIncome: isIncome ?? this.isIncome,
@@ -102,6 +116,7 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
     return (StringBuffer('ExpenseOrIncome(')
           ..write('id: $id, ')
           ..write('description: $description, ')
+          ..write('categoryName: $categoryName, ')
           ..write('amount: $amount, ')
           ..write('date_commit: $date_commit, ')
           ..write('isIncome: $isIncome')
@@ -111,13 +126,14 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
 
   @override
   int get hashCode =>
-      Object.hash(id, description, amount, date_commit, isIncome);
+      Object.hash(id, description, categoryName, amount, date_commit, isIncome);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ExpenseOrIncome &&
           other.id == this.id &&
           other.description == this.description &&
+          other.categoryName == this.categoryName &&
           other.amount == this.amount &&
           other.date_commit == this.date_commit &&
           other.isIncome == this.isIncome);
@@ -126,12 +142,14 @@ class ExpenseOrIncome extends DataClass implements Insertable<ExpenseOrIncome> {
 class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
   final Value<int> id;
   final Value<String> description;
+  final Value<String?> categoryName;
   final Value<int> amount;
   final Value<DateTime?> date_commit;
   final Value<bool> isIncome;
   const ExpenseOrIncomesCompanion({
     this.id = const Value.absent(),
     this.description = const Value.absent(),
+    this.categoryName = const Value.absent(),
     this.amount = const Value.absent(),
     this.date_commit = const Value.absent(),
     this.isIncome = const Value.absent(),
@@ -139,6 +157,7 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
   ExpenseOrIncomesCompanion.insert({
     this.id = const Value.absent(),
     required String description,
+    this.categoryName = const Value.absent(),
     required int amount,
     this.date_commit = const Value.absent(),
     this.isIncome = const Value.absent(),
@@ -147,6 +166,7 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
   static Insertable<ExpenseOrIncome> custom({
     Expression<int>? id,
     Expression<String>? description,
+    Expression<String?>? categoryName,
     Expression<int>? amount,
     Expression<DateTime?>? date_commit,
     Expression<bool>? isIncome,
@@ -154,6 +174,7 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (description != null) 'description': description,
+      if (categoryName != null) 'category_name': categoryName,
       if (amount != null) 'amount': amount,
       if (date_commit != null) 'date_commit': date_commit,
       if (isIncome != null) 'is_income': isIncome,
@@ -163,12 +184,14 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
   ExpenseOrIncomesCompanion copyWith(
       {Value<int>? id,
       Value<String>? description,
+      Value<String?>? categoryName,
       Value<int>? amount,
       Value<DateTime?>? date_commit,
       Value<bool>? isIncome}) {
     return ExpenseOrIncomesCompanion(
       id: id ?? this.id,
       description: description ?? this.description,
+      categoryName: categoryName ?? this.categoryName,
       amount: amount ?? this.amount,
       date_commit: date_commit ?? this.date_commit,
       isIncome: isIncome ?? this.isIncome,
@@ -183,6 +206,9 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
+    }
+    if (categoryName.present) {
+      map['category_name'] = Variable<String?>(categoryName.value);
     }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
@@ -201,6 +227,7 @@ class ExpenseOrIncomesCompanion extends UpdateCompanion<ExpenseOrIncome> {
     return (StringBuffer('ExpenseOrIncomesCompanion(')
           ..write('id: $id, ')
           ..write('description: $description, ')
+          ..write('categoryName: $categoryName, ')
           ..write('amount: $amount, ')
           ..write('date_commit: $date_commit, ')
           ..write('isIncome: $isIncome')
@@ -228,6 +255,13 @@ class $ExpenseOrIncomesTable extends ExpenseOrIncomes
           GeneratedColumn.checkTextLength(minTextLength: 2, maxTextLength: 50),
       typeName: 'TEXT',
       requiredDuringInsert: true);
+  final VerificationMeta _categoryNameMeta =
+      const VerificationMeta('categoryName');
+  late final GeneratedColumn<String?> categoryName = GeneratedColumn<String?>(
+      'category_name', aliasedName, true,
+      typeName: 'TEXT',
+      requiredDuringInsert: false,
+      $customConstraints: 'NULL REFERENCES categorys(name)');
   final VerificationMeta _amountMeta = const VerificationMeta('amount');
   late final GeneratedColumn<int?> amount = GeneratedColumn<int?>(
       'amount', aliasedName, false,
@@ -246,7 +280,7 @@ class $ExpenseOrIncomesTable extends ExpenseOrIncomes
       defaultValue: Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
-      [id, description, amount, date_commit, isIncome];
+      [id, description, categoryName, amount, date_commit, isIncome];
   @override
   String get aliasedName => _alias ?? 'expense_or_incomes';
   @override
@@ -266,6 +300,12 @@ class $ExpenseOrIncomesTable extends ExpenseOrIncomes
               data['description']!, _descriptionMeta));
     } else if (isInserting) {
       context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('category_name')) {
+      context.handle(
+          _categoryNameMeta,
+          categoryName.isAcceptableOrUnknown(
+              data['category_name']!, _categoryNameMeta));
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -300,16 +340,162 @@ class $ExpenseOrIncomesTable extends ExpenseOrIncomes
   }
 }
 
+class Category extends DataClass implements Insertable<Category> {
+  final String name;
+  Category({required this.name});
+  factory Category.fromData(Map<String, dynamic> data, GeneratedDatabase db,
+      {String? prefix}) {
+    final effectivePrefix = prefix ?? '';
+    return Category(
+      name: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
+    );
+  }
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  CategorysCompanion toCompanion(bool nullToAbsent) {
+    return CategorysCompanion(
+      name: Value(name),
+    );
+  }
+
+  factory Category.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return Category(
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= moorRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  Category copyWith({String? name}) => Category(
+        name: name ?? this.name,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('Category(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => name.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || (other is Category && other.name == this.name);
+}
+
+class CategorysCompanion extends UpdateCompanion<Category> {
+  final Value<String> name;
+  const CategorysCompanion({
+    this.name = const Value.absent(),
+  });
+  CategorysCompanion.insert({
+    required String name,
+  }) : name = Value(name);
+  static Insertable<Category> custom({
+    Expression<String>? name,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+    });
+  }
+
+  CategorysCompanion copyWith({Value<String>? name}) {
+    return CategorysCompanion(
+      name: name ?? this.name,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategorysCompanion(')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CategorysTable extends Categorys
+    with TableInfo<$CategorysTable, Category> {
+  final GeneratedDatabase _db;
+  final String? _alias;
+  $CategorysTable(this._db, [this._alias]);
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 10),
+      typeName: 'TEXT',
+      requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [name];
+  @override
+  String get aliasedName => _alias ?? 'categorys';
+  @override
+  String get actualTableName => 'categorys';
+  @override
+  VerificationContext validateIntegrity(Insertable<Category> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  Category map(Map<String, dynamic> data, {String? tablePrefix}) {
+    return Category.fromData(data, _db,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  }
+
+  @override
+  $CategorysTable createAlias(String alias) {
+    return $CategorysTable(_db, alias);
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   late final $ExpenseOrIncomesTable expenseOrIncomes =
       $ExpenseOrIncomesTable(this);
+  late final $CategorysTable categorys = $CategorysTable(this);
   late final ExpenseOrIncomeDao expenseOrIncomeDao =
       ExpenseOrIncomeDao(this as AppDatabase);
+  late final CategoryDao categoryDao = CategoryDao(this as AppDatabase);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [expenseOrIncomes];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [expenseOrIncomes, categorys];
 }
 
 // **************************************************************************
@@ -319,4 +505,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 mixin _$ExpenseOrIncomeDaoMixin on DatabaseAccessor<AppDatabase> {
   $ExpenseOrIncomesTable get expenseOrIncomes =>
       attachedDatabase.expenseOrIncomes;
+}
+mixin _$CategoryDaoMixin on DatabaseAccessor<AppDatabase> {
+  $CategorysTable get categorys => attachedDatabase.categorys;
 }

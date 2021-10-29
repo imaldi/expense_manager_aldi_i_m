@@ -11,11 +11,17 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final db = AppDatabase();
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Provider(
-      create: (BuildContext context) { return AppDatabase().expenseOrIncomeDao; },
+    return
+    MultiProvider(
+    providers: [
+    Provider(create: (_) => db.expenseOrIncomeDao),
+    Provider(create: (_) => db.categoryDao),
+    ],
       child: MaterialApp(
         title: 'Flutter Demo',
         debugShowCheckedModeBanner: false,
@@ -96,8 +102,11 @@ class _MyHomePageState extends State<MyHomePage> {
         padding: EdgeInsets.all(16.0),
         child: FloatingActionButton(
           onPressed: () {
-            navigateTo(context, Provider.value(value: Provider.of<ExpenseOrIncomeDao>(context, listen: false),
-            child: AddExpenseOrIncomeScreen()));
+            navigateTo(context, Provider.value(
+              value: Provider.of<CategoryDao>(context, listen: false),
+              child: Provider.value(value: Provider.of<ExpenseOrIncomeDao>(context, listen: false),
+              child: AddExpenseOrIncomeScreen()),
+            ));
           },
         child: Icon(Icons.add,color: Colors.white,),),
       ),
@@ -127,11 +136,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("category placeholder",softWrap: true,),
+                        Text("${item[index].categoryName ?? "kosong"}",softWrap: true,),
                         Text("${item[index].description}",softWrap: true,),
                       ],
                     ),
-                    trailing: Text("${dateArray[index]}"),
+                    trailing: Text("${item[index].date_commit}"),
                   ),
                 ),
               );

@@ -6,7 +6,12 @@ import 'basic_alert_dialog.dart';
 import 'custom_text_field.dart';
 
 addCategoryDialog({
-    required BuildContext context, required TextEditingController textEditingController, required GlobalKey<FormState> formKey}) {
+    required BuildContext context,
+    required TextEditingController textEditingController,
+    required GlobalKey<FormState> formKey,
+    required Function(String) onSubmitted
+}) {
+
   basicAlertDialogFunction(context: context, alertDialog: AlertDialog(
     title: Column(
       mainAxisSize: MainAxisSize.min,
@@ -66,6 +71,7 @@ addCategoryDialog({
                   ),
                   onPressed: () {
                     //do something later
+                    onSubmitted(textEditingController.text);
                     Navigator.of(context).pop();
                   },
                 ),

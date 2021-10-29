@@ -29,7 +29,6 @@ class _FormAddExpenseState extends State<FormAddExpense> {
         child: Center(
       child: Column(
         children: [
-          Text("Hey"),
           Row(
             children: [
               Expanded(
@@ -64,8 +63,11 @@ class _FormAddExpenseState extends State<FormAddExpense> {
             // padding: EdgeInsets.all(size_medium),
             child: InkWell(
               onTap: (){
-                navigateTo(context, SelectCategoryScreen());
-                categoryController.text = "test";
+                navigateTo(context, Provider.value(
+                    value: Provider.of<CategoryDao>(context, listen: false),
+                    child: SelectCategoryScreen(onChosen: (val){
+                      categoryController.text = val;
+                    },)));
               },
               child: TextFormField(
                 controller: categoryController,
